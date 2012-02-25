@@ -70,7 +70,7 @@ local function throwBalloon(releasePoint)
 end
 
 local function setTarget(event)
-	local adjEvent = Vector.subtract(event, view) -- adjust event b/c view
+	local adjEvent = Vector.subtract(event, view) -- adjusted event postion based on view
 	distance = Vector.subtract(adjEvent, player)
 	distance = Vector.magnitude(distance)
 	if (event.phase == "began" and distance <= 32) then
@@ -94,17 +94,24 @@ local function setTarget(event)
 end
 
 local function updateView()
-	local viewSpeed = 10
-	local targetX = screenW / 2 - player.x
-	local targetY = screenH / 2 - player.y
-	local diffX = targetX - view.x
-	local diffY = targetY - view.y
-	-- If view is beyond speed, then move in direction by speed, else target view
-	if (math.abs(diffX) > 10) then view.x = view.x + diffX / math.abs(diffX) * viewSpeed
-	else view.x = targetX end
-	-- Same for Y
-	if (math.abs(diffY) > 10) then view.y = view.y + diffY / math.abs(diffY) * viewSpeed
-	else view.y = targetY end
+	local viewRange = 200
+	local viewSpeed = 5
+	local adjPlayer = Vector.add(player, view) -- adjusted player postion based on view
+	print(adjPlayer.x, view.x)
+	if (adjPlayer.x < viewRange or adjPlayer.x > screenW - viewRange) then
+		local targetX = screenW / 2 - player.x
+		local diffX = targetX - view.x
+		-- If view is beyond speed, then move in direction by speed, else target view
+		if (math.abs(diffX) > 10) then view.x = view.x + diffX / math.abs(diffX) * viewSpeed
+		else view.x = targetX end
+	end
+	if (adjPlayer.y < viewRange or adjPlayer.y > screenH - viewRange) then
+		local targetY = screenH / 2 - player.y
+		local diffY = targetY - view.y
+		-- Same for Y
+		if (math.abs(diffY) > 10) then view.y = view.y + diffY / math.abs(diffY) * viewSpeed
+		else view.y = targetY end
+	end
 end
 
 Runtime:addEventListener("touch", setTarget)
