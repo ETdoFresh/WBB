@@ -35,7 +35,7 @@ function Balloon.new(param)
 	function self:explode()
 		if (not(hasExploded)) then
 			hasExploded = true
-			local circle = display.newCircle(self.x, self.y, .001)
+			local circle = display.newCircle(self.parent, self.x, self.y, .001)
 			local function removeCircle() circle:removeSelf() end
 			circle.type = "explosion"
 			circle:setFillColor(0, 0, 255)

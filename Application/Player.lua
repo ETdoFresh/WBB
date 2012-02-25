@@ -23,11 +23,10 @@ function Player.new()
 			else
 				wetness = " felt a trickle!"
 			end
-			local newText = display.newText(wetness, 0, 0, native.systemFont, 16)
+			local newText = display.newText(self.parent, wetness, 0, 0, native.systemFont, 16)
 			newText.x, newText.y = event.target.x, event.target.y
 			newText.alpha = 1
 			transition.to(newText, {time = 3000, alpha = 0, onComplete = function () newText:removeSelf() end})
-			print(tostring(event.target)..wetness)
 		end
 	end
 	
