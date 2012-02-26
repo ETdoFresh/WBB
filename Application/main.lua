@@ -9,4 +9,4 @@ display.setStatusBar( display.HiddenStatusBar )  -- hide the status bar
 
 -- Requirements
 local storyboard = require "storyboard"
-storyboard.gotoScene("logo")
+storyboard.gotoScene("game")

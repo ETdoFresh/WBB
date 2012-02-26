@@ -8,6 +8,7 @@ local Player = require "Player"
 local Vector = require "Vector"
 local Steering = require "Steering"
 local Balloon = require "Balloon"
+local Text = require "Text"
 
 -- Start physics engine
 physics.start()
@@ -28,11 +29,12 @@ end
 
 local function setTarget(event)
 	local adjEvent = Vector.subtract(event, view) -- adjusted event postion based on view
-	distance = Vector.subtract(adjEvent, player)
+	local distance = Vector.subtract(adjEvent, player)
 	distance = Vector.magnitude(distance)
 	if (event.phase == "began" and distance <= 32) then
 		player.isThrowing = true
 		player:setTarget(player)
+		if (player.throwCircle) then player.throwCircle:removeSelf() end
 		player.throwCircle = display.newCircle(view, player.x, player.y, .001)
 		player.throwCircle.alpha = 0.25
 	elseif (player.isThrowing) then
@@ -41,9 +43,12 @@ local function setTarget(event)
 			player.throwCircle.width = distance * 2
 			player.throwCircle.height = player.throwCircle.width
 		elseif (event.phase == "ended" or event.phase == "cancelled") then
-			throwBalloon(adjEvent)
+			local distance = Vector.subtract(event, {x = event.xStart, y = event.yStart})
+			distance = Vector.magnitude(distance)
+			if (distance > 5) then throwBalloon(adjEvent) end
 			player.isThrowing = false
 			player.throwCircle:removeSelf()
+			player.throwCircle = nil
 		end
 	else -- If distance > 50
 		player:setTarget({x = adjEvent.x, y = adjEvent.y})
@@ -91,6 +96,10 @@ function scene:enterScene(event)
 	physics.addBody(borderRight, "static", borderBody)
 	physics.addBody(square, "static", borderBody)
 
+	-- Show level display
+	local text = Text.newTitle{title = "Level 1: The Tutorial", time = 10000, fadeIn = 500, x = screenW / 2, y = screenH - 60, titleSize = 30,
+		description = "Learn how to move around the level"}
+	
 	-- Create a player
 	player = Player.new()
 	view:insert(player)
@@ -101,8 +110,8 @@ function scene:enterScene(event)
 	for i = 1, 3 do
 		local wanderer = Player.new()
 		view:insert(wanderer)
-		wanderer.x = math.random(10, screenW-10)
-		wanderer.y = math.random(10, screenH-10)
+		wanderer.x = math.random(10, screenW - 10)
+		wanderer.y = math.random(10, screenH - 10)
 		wanderer = Steering.new{radius = 16, self = wanderer, maxSpeed = 20}
 		wanderer:setSteering("wander")
 	end

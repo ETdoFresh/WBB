@@ -1,5 +1,6 @@
 local scrW, scrH = display.contentWidth, display.contentHeight
 
+local Text = require "Text"
 local storyboard = require "storyboard"
 local scene = storyboard.newScene()
 

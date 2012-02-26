@@ -7,7 +7,7 @@ local Player = {}
 -- Requirements
 -- ================================
 local Vector = require "Vector"
-local MessageBubble = require "MessageBubble"
+local Text = require "Text"
 
 function Player.new()
 	local self = display.newImageRect("player.png", 61, 61)
@@ -24,7 +24,7 @@ function Player.new()
 			else
 				wetness = " felt a trickle!"
 			end
-			local newText = MessageBubble.new{text = wetness}
+			local newText = Text.newMessageBubble{text = wetness}
 			self.parent:insert(newText)
 			newText.x, newText.y = event.target.x, event.target.y
 			newText.alpha = 1
