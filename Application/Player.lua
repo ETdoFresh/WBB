@@ -7,6 +7,7 @@ local Player = {}
 -- Requirements
 -- ================================
 local Vector = require "Vector"
+local MessageBubble = require "MessageBubble"
 
 function Player.new()
 	local self = display.newImageRect("player.png", 61, 61)
@@ -23,10 +24,11 @@ function Player.new()
 			else
 				wetness = " felt a trickle!"
 			end
-			local newText = display.newText(self.parent, wetness, 0, 0, native.systemFont, 16)
+			local newText = MessageBubble.new{text = wetness}
+			self.parent:insert(newText)
 			newText.x, newText.y = event.target.x, event.target.y
 			newText.alpha = 1
-			transition.to(newText, {time = 3000, alpha = 0, onComplete = function () newText:removeSelf() end})
+			transition.to(newText, {delay = 2500, time = 500, alpha = 0, onComplete = function () newText:removeSelf() end})
 		end
 	end
 	

@@ -49,7 +49,7 @@ function Balloon.new(param)
 	
 	local function onCollision(event)
 		-- 90% chance of explosion if thrown hard
-		if (event.force > .0015 and math.random(0, 10) < 9) then self:explode() end
+		if (event.force > .002 and math.random(0, 10) < 9) then self:explode() end
 	end
 	
 	-- ================================
