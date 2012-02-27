@@ -352,6 +352,13 @@ function Steering.new(param)
 		if (steeringType) then steeringType.target = target end
 	end
 	
+	function self:die()
+		Runtime:removeEventListener("enterFrame", self)
+		self:removeEventListener("die", self)
+		self:removeSelf()
+		self = nil
+	end
+	
 	return self
 end
 

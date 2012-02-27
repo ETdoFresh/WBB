@@ -10,16 +10,21 @@ local Steering = require "Steering"
 local Balloon = require "Balloon"
 local Text = require "Text"
 
+-- Setup next stage of music
+storyboard.musicNextFile = audio.loadSound("level1noball.mp3")
+
 -- Start physics engine
 physics.start()
 physics.setGravity(0, 0)
 physics.setScale(30) -- the optimal 0.1m to 10m range corresponds to visible sprites between 3 and 300 pixels in size
-physics.setDrawMode("hybrid") -- debug, hybrid, normal
+physics.setDrawMode("normal") -- debug, hybrid, normal
 physics.setPositionIterations(8) -- iterate through X position approximations per frame for each object
 physics.setVelocityIterations(3) -- iterate through X velocity approximations per frame for each object
 
 local scene = storyboard.newScene()
-local view, background, borderTop, borderBottom, borderLeft, borderRight, square, player
+local view, background, borderTop, borderBottom, borderLeft, borderRight, player, tree, fountain
+local statics = {}
+local circles = {}
 
 local function throwBalloon(releasePoint)
 	local pull = Vector.subtract(releasePoint, player)
@@ -58,29 +63,47 @@ end
 local function updateView()
 	local viewRange = 200
 	local adjPlayer = Vector.add(player, view) -- adjusted player postion based on view
-	view.x = math.min(screenW / 2 - player.x, 0)
-	view.x = math.max(view.x, screenW - background.width)
-	view.y = math.min(screenH / 2 - player.y, 0)
-	view.y = math.max(view.y, screenH - background.height)
+	view.x = math.min(screenW / 2 - player.x, 100)
+	view.x = math.max(view.x, screenW - background.width + 100)
+	view.y = math.min(screenH / 2 - player.y, 100)
+	view.y = math.max(view.y, screenH - background.height + 100)
 end
 
 function scene:createScene( vent)
 	-- Create a view group
 	view = display.newGroup()
+	view.x, view.y = 100, 100
 	self.view:insert(view)
 
 	-- Create a background
-	background = display.newRect(view, 0, 0, screenW * 2, screenH * 2)
-	background:setFillColor(32, 32, 32)
+	background = display.newImageRect(view, "background.jpg", 1400, 1000)
+	background.x, background.y = 600, 400
 
 	-- Create borders around the edges
-	borderTop = display.newRect(view, 0, 0, background.contentWidth, 1)
-	borderBottom = display.newRect(view, 0, background.contentHeight-1, background.contentWidth, 1)
-	borderLeft = display.newRect(view, 0, 0, 1, background.contentHeight)
-	borderRight = display.newRect(view, background.contentWidth-1, 1, 1, background.contentHeight)
-	square = display.newRect(view, 300,300,50,10)
-
+	table.insert(statics, display.newRect(view, 0, -100, 1200, 100))
+	table.insert(statics, display.newRect(view, 0, 800, 1200, 100))
+	table.insert(statics, display.newRect(view, -100, -100, 100, 1000))
+	table.insert(statics, display.newRect(view, 1200, -100, 100, 1000))
+	-- House
+	table.insert(statics, display.newRect(view, 250, 0, 50, 300))
+	table.insert(statics, display.newRect(view, 300, 250, 600, 50))
+	table.insert(statics, display.newRect(view, 900, 0, 50, 300))
+	-- Deck
+	table.insert(statics, display.newRect(view, 350, 300, 10, 200))
+	table.insert(statics, display.newRect(view, 360, 490, 190, 10))
+	table.insert(statics, display.newRect(view, 650, 490, 190, 10))
+	table.insert(statics, display.newRect(view, 840, 300, 10, 200))
+	-- Tree
+	tree = display.newImageRect(view, "tree.png", 296, 290)
+	tree.x, tree.y = 200, 635
+	table.insert(circles, display.newCircle(view, 200, 635, 60))
+	-- Fountain
+	fountain = display.newImageRect(view, "fountain.png", 232, 232)
+	fountain.x, fountain.y = 1000, 635
+	table.insert(circles, display.newCircle(view, 1000, 635, 116))
 	
+	for i = 1, #statics do statics[i].isVisible = false end
+	for i = 1, #circles do circles[i].isVisible = false end
 end
 
 function scene:enterScene(event)
@@ -89,16 +112,18 @@ function scene:enterScene(event)
 	if (prevScene) then storyboard.purgeScene(prevScene) end
 
 	-- add physics to the borders
-	local borderBody = {friction=0.4, bounce=0.2}
-	physics.addBody(borderTop, "static", borderBody)
-	physics.addBody(borderBottom, "static", borderBody)
-	physics.addBody(borderLeft, "static", borderBody)
-	physics.addBody(borderRight, "static", borderBody)
-	physics.addBody(square, "static", borderBody)
+	local borderBody = {friction=0.4, bounce=0.2, filter = {categoryBits = 1, maskBits = 253}}
+	-- Loops
+	for i = 1, #statics do physics.addBody(statics[i], "static", borderBody) end
+	for i = 1, #circles do
+		borderBody.filter = nil
+		borderBody.radius = circles[i].width / 2
+		physics.addBody(circles[i], "static", borderBody)
+	end
 
 	-- Show level display
 	local text = Text.newTitle{title = "Level 1: The Tutorial", time = 10000, fadeIn = 500, x = screenW / 2, y = screenH - 60, titleSize = 30,
-		description = "Learn how to move around the level"}
+		description = "Getting a feel for the game"}
 	
 	-- Create a player
 	player = Player.new()
@@ -106,7 +131,7 @@ function scene:enterScene(event)
 	player = Steering.new{radius = 16, self = player, target = player}
 	player.x, player.y = 100, 100
 	player:setSteering("combine")
-
+	
 	for i = 1, 3 do
 		local wanderer = Player.new()
 		view:insert(wanderer)
@@ -114,8 +139,12 @@ function scene:enterScene(event)
 		wanderer.y = math.random(10, screenH - 10)
 		wanderer = Steering.new{radius = 16, self = wanderer, maxSpeed = 20}
 		wanderer:setSteering("wander")
+		wanderer:addEventListener("die", wanderer)
 	end
 
+	view:insert(tree)
+	view:insert(fountain)
+	
 	Runtime:addEventListener("touch", setTarget)
 	Runtime:addEventListener("enterFrame", updateView)
 end

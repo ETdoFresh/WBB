@@ -9,7 +9,9 @@ local Balloon = {}
 local Vector = require "Vector"
 
 function Balloon.new(param)
-	local self = display.newImageRect("balloon.png", 19, 25)
+	local colors = {"Blue", "Green", "Red", "Yellow"}
+	local colors = colors[math.random(4)]
+	local self = display.newImageRect("balloon"..colors..".png", 19, 25)
 	
 	-- ================================
 	-- Local Variables
@@ -20,6 +22,8 @@ function Balloon.new(param)
 	local pull = param.pull or self -- Pull vector
 	local maxPull = 100 -- Maximum amount of pull
 	local hasExploded = false
+	local explosion
+	local eFrames = {"splash-08.png", "splash-09.png", "splash-10.png", "splash-11.png", "splash-12.png", "splash-13.png", "splash-14.png", "splash-15.png"}
 	
 	-- ================================
 	-- Public Variables
@@ -29,21 +33,40 @@ function Balloon.new(param)
 	self.xScale = scale
 	self.yScale = scale
 	
+	local function nextFrame()
+		local x, y = explosion.x, explosion.y
+		local i = explosion.currentFrame + 1
+		local parent = explosion.parent
+		if (explosion) then explosion:removeSelf() end
+		if (i > #eFrames) then return true end
+		explosion = display.newImageRect(parent, eFrames[i], 101, 100)
+		explosion.x, explosion.y = x, y
+		explosion.currentFrame = i
+		timer.performWithDelay(50, nextFrame)
+	end
+	
 	-- ================================
 	-- Public Functions
 	-- ================================
 	function self:explode()
 		if (not(hasExploded)) then
 			hasExploded = true
-			local circle = display.newCircle(self.parent, self.x, self.y, .001)
-			local function removeCircle() circle:removeSelf() end
+			explosion = display.newImageRect(self.parent, eFrames[1], 101, 100)
+			explosion.x, explosion.y = self.x, self.y
+			explosion.currentFrame = 1
+			explosion.alpha = 0.5
+			transition.to(explosion, {time = 50, alpha = 1, onComplete = nextFrame})
+			local circle = display.newGroup()
+			circle.x, circle.y = self.x, self.y
 			circle.type = "explosion"
-			circle:setFillColor(0, 0, 255)
-			transition.to(circle, {time = 500, alpha = 1, width = 100, height = 100})
-			transition.to(circle, {delay = 500, time = 500, alpha = 0, onComplete=removeCircle})
+			timer.performWithDelay(1, function()
+				physics.addBody(circle, {radius = 50 * scale, isSensor = true})
+			end)
+			timer.performWithDelay(600, function()
+				circle:removeSelf()
+			end)
 			self:removeSelf()
 			self:dispatchEvent{name = "exploded"}
-			timer.performWithDelay(1, function() physics.addBody(circle, {radius = 50 * scale, isSensor = true}) end)
 		end
 	end
 	
@@ -56,7 +79,7 @@ function Balloon.new(param)
 	-- Constructor
 	-- ================================
 	-- Add Physics
-	physics.addBody(self, {radius = 5 * scale, bounce = 0})
+	physics.addBody(self, {radius = 8 * scale, bounce = 0, filter = {categoryBits = 2, maskBits = 253}})
 	self.angularVelocity = math.random(-720, 720)
 	-- Compute Vectors
 	local distance = math.min(Vector.magnitude(pull), maxPull)
