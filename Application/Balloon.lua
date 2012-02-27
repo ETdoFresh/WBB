@@ -8,6 +8,10 @@ local Balloon = {}
 -- ================================
 local Vector = require "Vector"
 
+-- Load Squish sounds
+local squish = {"squish1.mp3","squish3.mp3","squish4.mp3",}
+for i = 1, #squish do squish[i] = audio.loadSound(squish[i]) end
+
 function Balloon.new(param)
 	local colors = {"Blue", "Green", "Red", "Yellow"}
 	local colors = colors[math.random(4)]
@@ -51,6 +55,7 @@ function Balloon.new(param)
 	function self:explode()
 		if (not(hasExploded)) then
 			hasExploded = true
+			audio.play(squish[math.random(#squish)])
 			explosion = display.newImageRect(self.parent, eFrames[1], 101, 100)
 			explosion.x, explosion.y = self.x, self.y
 			explosion.currentFrame = 1

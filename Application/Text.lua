@@ -40,7 +40,7 @@ function Text.newCC(param)
 	-- Parameters
 	local text = param.text
 	local font = param.font or native.systemFont
-	local size = param.size or 16
+	local size = param.size or 25
 	param.color = param.color or {}
 	local r = param.color[1] or 255
 	local g = param.color[2] or 255
@@ -51,6 +51,7 @@ function Text.newCC(param)
 	local fadeOut = param.fadeOut or fadeIn
 	local pos = {x = param.x or 0, y = param.y or 0}
 	local shadowOffset = param.shadowOffset or 2
+	local onComplete = param.onComplete
 	
 	-- Creation
 	local shadow = display.newText(self, text, 0, 0, font, size)
@@ -68,6 +69,7 @@ function Text.newCC(param)
 	-- Animation
 	self.tween = transition.to(self, {delay = 0, time = fadeIn, alpha = 1, onComplete = function ()
 		self.tween = transition.to(self, {delay = time, time = fadeOut, alpha = 0, onComplete = function ()
+			if (onComplete) then onComplete() end
 			self:removeSelf()
 			self = nil
 		end})
@@ -110,6 +112,7 @@ function Text.newTitle(param)
 	local fadeOut = param.fadeOut or fadeIn
 	local pos = {x = param.x or 0, y = param.y or 0}
 	local shadowOffset = param.shadowOffset or 2
+	local onComplete = param.onComplete
 	
 	-- Creation
 	local titleShadow = display.newText(self, title, 0, 0, font, titleSize)
@@ -161,6 +164,7 @@ function Text.newTitle(param)
 	-- Animation
 	self.tween = transition.to(self, {delay = 0, time = fadeIn, x = pos.x, alpha = 1, onComplete = function ()
 		self.tween = transition.to(self, {delay = time, time = fadeOut, x = screenW, alpha = 0, onComplete = function ()
+			if (onComplete) then onComplete() end
 			self:removeSelf()
 			self = nil
 		end})

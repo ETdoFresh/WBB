@@ -9,8 +9,10 @@ local Player = {}
 local Vector = require "Vector"
 local Text = require "Text"
 
-function Player.new()
-	local self = display.newImageRect("player.png", 61, 61)
+function Player.new(param)
+	param = param or {}
+	local image = param.type or "player"
+	local self = display.newImageRect(image..".png", 61, 61)
 	local wetness = 0
 	local wetnessBar = display.newRect(self.parent, 0, 0, 60, 7)
 	wetnessBar:setFillColor(0, 0, 0, 0)
@@ -51,11 +53,7 @@ function Player.new()
 		wetnessFill.y = wetnessBar.y
 		-- Remove
 		if (wetness > self.maxWetness) then
-			wetnessBar:removeSelf()
-			wetnessFill:removeSelf()
-			self:removeEventListener("collision", onCollision)
-			Runtime:removeEventListener("enterFrame", update)
-			self:dispatchEvent{name = "die", target = self}
+			self:removeMe()
 		end
 	end
 	
@@ -66,6 +64,14 @@ function Player.new()
 		else
 			timer.cancel(event.source)
 		end
+	end
+	
+	function self:removeMe()
+		Runtime:removeEventListener("enterFrame", update)
+		wetnessBar:removeSelf()
+		wetnessFill:removeSelf()
+		self:removeEventListener("collision", onCollision)
+		self:dispatchEvent{name = "die", target = self}
 	end
 	
 	self:addEventListener("collision", onCollision)
